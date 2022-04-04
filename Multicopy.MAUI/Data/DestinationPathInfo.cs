@@ -10,8 +10,8 @@ namespace Multicopy.MAUI.Data
     {
         public string DestinationPath { get; set; }
         public string TotalTimeFormatted { get; set; }
-        public double FilesToCopy { get; set; }
-        public double FilesCopied { get; set; }
+        public int FilesToCopy { get; set; }
+        public int FilesCopied { get; set; }
         public string CurrentFileName { get; set; }
         public string Speed { get; set; }
         public string CurrentCopyTime { get; set; }

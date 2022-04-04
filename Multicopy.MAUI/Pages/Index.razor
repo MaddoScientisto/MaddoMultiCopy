@@ -10,7 +10,8 @@
 @using System.Security.Cryptography
 @using System.Text
 @inject Blazored.LocalStorage.ILocalStorageService _localStorage
-@inject IFolderPicker FolderPicker;
+@inject IFolderPicker FolderPicker
+@inject ICopyService CopyService
 
 <Container>
     <Card>
@@ -25,15 +26,15 @@
         <CardBody>
             <Addons>
                 <Addon AddonType="AddonType.Body">
-                    <TextEdit Placeholder="Percorso sorgente" @bind-Text="@Settings.SourcePath"/>
-                    
+                    <TextEdit Placeholder="Percorso sorgente" @bind-Text="@Settings.SourcePath" />
+
                 </Addon>
                 <Addon AddonType="AddonType.End">
                     <Button Clicked="@GetSourceFolder"><Icon Name="IconName.Folder" Color="Color.Primary" /> Seleziona</Button>
                     <Button Clicked="@OpenFolder"><Icon Name="IconName.FolderOpen" Color="Color.Success" /> Apri</Button>
                 </Addon>
-            </Addons>      
-           
+            </Addons>
+
         </CardBody>
     </Card>
     <Card>
@@ -41,19 +42,20 @@
             Destinazioni
         </CardHeader>
         <CardBody>
-            <Repeater Items="DestinationPaths">
+
+            <Repeater Items="DestinationPaths" TItem="DestinationPathInfo">
                 <Card>
                     <CardBody>
                         <Addons>
                             <Addon AddonType="AddonType.Start">
-                                <Button Clicked="@(e => RemoveDestination(destination))" Color="Color.Danger" Disabled="@IsWorking">-</Button>
+                                <Button Clicked="@(e => RemoveDestination(context))" Color="Color.Danger" Disabled="@IsWorking">-</Button>
                             </Addon>
                             <Addon AddonType="AddonType.Body">
-                                <TextEdit @bind-Text="@context.DesetinationPath" />                                
+                                <TextEdit @bind-Text="@context.DestinationPath" />
                             </Addon>
                             <Addon AddonType="AddonType.End">
-                                <Button Color="Color.Primary" Clicked="@destination.GetDestinationFolder" Disabled="@IsWorking"><Icon Name="IconName.Folder" /> Seleziona</Button>
-                                <Button Color="Color.Secondary" Clicked="@destination.OpenFolder">
+                                <Button Color="Color.Primary" Clicked="@(e => CopyService.GetDestinationFolder(context))" Disabled="@IsWorking"><Icon Name="IconName.Folder" /> Seleziona</Button>
+                                <Button Color="Color.Secondary" Clicked="(e => CopyService.OpenFolder(context))">
                                     <Icon Name="IconName.FolderOpen" />
                                     Apri
                                 </Button>
@@ -70,7 +72,9 @@
             <Button Clicked="@AddDestination" Color="Color.Success" Disabled="@IsWorking">+</Button>
         </CardBody>
     </Card>
+
     <CardGroup>
+
         <Card>
             <CardHeader>
                 Gestione Conflitti
@@ -83,6 +87,7 @@
                 </RadioGroup>
             </CardBody>
         </Card>
+
         <Card>
             <CardHeader>Altre opzioni</CardHeader>
             <UnorderedList>
@@ -94,20 +99,20 @@
                 </UnorderedListItem>
             </UnorderedList>
         </Card>
+
     </CardGroup>
 
-   <Row>
-       <Button Clicked="@StartCopy" Color="Color.Success" Loading="@IsWorking" Disabled="@IsWorking">Inizia Elaborazione</Button>
+    <Row>
+        <Button Clicked="@StartCopy" Color="Color.Success" Loading="@IsWorking" Disabled="@IsWorking">Inizia Elaborazione</Button>
         <Button Clicked="@StopCopy" Color="Color.Danger" Disabled="@IsIdle">Arresta Elaborazione</Button>
-        <Button Clicked="@Verify" Color="Color.Primary" Loading="@IsWorking" Disabled="@IsWorking">Verifica</Button>
-   </Row>
+    </Row>
 
 
-   
+
 </Container>
 
 @code {
-    [Inject] ICopyService CopyService { get; set; }
+    //[Inject] ICopyService CopyService { get; set; }
     [Inject] INotificationService NotificationService { get; set; }
 
     private bool IsWorking { get; set; }
@@ -266,7 +271,7 @@
         }
         if (!DestinationPaths.Any())
         {
-            await NotificationService.Error( "Non sono state specificate destinazioni");
+            await NotificationService.Error("Non sono state specificate destinazioni");
             return false;
         }
         else if (DestinationPaths.Any(x => string.IsNullOrWhiteSpace(x.DestinationPath)))
@@ -341,8 +346,8 @@
                     dest.TotalTimeFormatted = timer.Elapsed.Humanize();
                     await NotificationService.Success("Copia Finita");
 
-                // TODO Notifica di sistema
-                //Electron.Notification.Show(new ElectronNET.API.Entities.NotificationOptions("Finita una copia", dest.DestinationPath));
+                    // TODO Notifica di sistema
+                    //Electron.Notification.Show(new ElectronNET.API.Entities.NotificationOptions("Finita una copia", dest.DestinationPath));
                 }, token);
             }
             else
@@ -364,21 +369,8 @@
 
             if (Settings.DoMove)
             {
-
-
                 Directory.Delete(Settings.SourcePath, true);
-
             }
-
-            /*if (TurnOff)
-            {
-            Process.Start("shutdown", "/s /t 0");
-            }
-
-            if (Exit)
-            {
-            Environment.Exit(0);
-            }*/
 
         }
         catch (OperationCanceledException e)
@@ -417,5 +409,5 @@
 
     }
 
-    
+
 }
