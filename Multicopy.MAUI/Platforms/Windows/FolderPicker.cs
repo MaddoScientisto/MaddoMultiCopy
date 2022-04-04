@@ -19,8 +19,9 @@ namespace Multicopy.MAUI.Platforms.Windows
 
             // Associate the HWND with the file picker
             WinRT.Interop.InitializeWithWindow.Initialize(folderPicker, hwnd);
-
+            
             var result = await folderPicker.PickSingleFolderAsync();
+
 
             return result?.Path;
         }

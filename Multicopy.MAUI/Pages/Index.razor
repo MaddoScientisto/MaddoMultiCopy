@@ -1,7 +1,421 @@
 ﻿@page "/"
+@using Dasync.Collections
+@using Humanizer
+@using IOExtensions
+@using Multicopy.MAUI.Data
+@using System.Collections.ObjectModel
+@using Newtonsoft.Json
+@using Multicopy.MAUI.Services
+@using System.Diagnostics
+@using System.Security.Cryptography
+@using System.Text
+@inject Blazored.LocalStorage.ILocalStorageService _localStorage
+@inject IFolderPicker FolderPicker;
 
-<h1>Hello, world!</h1>
+<Container>
+    <Card>
+        <CardHeader>Impostazioni</CardHeader>
+        <CardBody>
+            <Button Clicked="@LoadSettings" Color="Color.Primary" Disabled="@IsWorking">Carica Impostazioni</Button>
+            <Button Clicked="@SaveSettings" Color="Color.Success" Disabled="@IsWorking">Salva Impostazioni</Button>
+        </CardBody>
+    </Card>
+    <Card>
+        <CardHeader>Sorgente</CardHeader>
+        <CardBody>
+            <Addons>
+                <Addon AddonType="AddonType.Body">
+                    <TextEdit Placeholder="Percorso sorgente" @bind-Text="@Settings.SourcePath"/>
+                    
+                </Addon>
+                <Addon AddonType="AddonType.End">
+                    <Button Clicked="@GetSourceFolder"><Icon Name="IconName.Folder" Color="Color.Primary" /> Seleziona</Button>
+                    <Button Clicked="@OpenFolder"><Icon Name="IconName.FolderOpen" Color="Color.Success" /> Apri</Button>
+                </Addon>
+            </Addons>      
+           
+        </CardBody>
+    </Card>
+    <Card>
+        <CardHeader>
+            Destinazioni
+        </CardHeader>
+        <CardBody>
+            <Repeater Items="DestinationPaths">
+                <Card>
+                    <CardBody>
+                        <Addons>
+                            <Addon AddonType="AddonType.Start">
+                                <Button Clicked="@(e => RemoveDestination(destination))" Color="Color.Danger" Disabled="@IsWorking">-</Button>
+                            </Addon>
+                            <Addon AddonType="AddonType.Body">
+                                <TextEdit @bind-Text="@context.DesetinationPath" />                                
+                            </Addon>
+                            <Addon AddonType="AddonType.End">
+                                <Button Color="Color.Primary" Clicked="@destination.GetDestinationFolder" Disabled="@IsWorking"><Icon Name="IconName.Folder" /> Seleziona</Button>
+                                <Button Color="Color.Secondary" Clicked="@destination.OpenFolder">
+                                    <Icon Name="IconName.FolderOpen" />
+                                    Apri
+                                </Button>
+                            </Addon>
+                        </Addons>
+                        <Progress @bind-Value="@context.FilesCopied" @bind-Max="@context.FilesToCopy"></Progress>
+                        <p>@context.CurrentFileName</p>
+                        <span>@context.CurrentCopyTime</span> <span>@context.Speed</span> <span>Copiati: @context.FilesCopied / @context.FilesToCopy</span>
+                        <span>Sovrascritti: @context.FilesOverwritten Saltati: @context.FilesSkipped Rinominati: @context.FilesRenamed Eliminati: @context.FilesDeleted</span>
+                        <span>Tempo Totale: @context.TotalTimeFormatted</span>
+                    </CardBody>
+                </Card>
+            </Repeater>
+            <Button Clicked="@AddDestination" Color="Color.Success" Disabled="@IsWorking">+</Button>
+        </CardBody>
+    </Card>
+    <CardGroup>
+        <Card>
+            <CardHeader>
+                Gestione Conflitti
+            </CardHeader>
+            <CardBody>
+                <RadioGroup TValue="FileConflictType" @bind-CheckedValue="@Settings.FileConflict" Orientation="Orientation.Vertical">
+                    <Radio TValue="FileConflictType" Value="@FileConflictType.Overwrite">Sovrascrivi</Radio>
+                    <Radio TValue="FileConflictType" Value="@FileConflictType.Rename">Rinomina</Radio>
+                    <Radio TValue="FileConflictType" Value="@FileConflictType.Skip">Ignora</Radio>
+                </RadioGroup>
+            </CardBody>
+        </Card>
+        <Card>
+            <CardHeader>Altre opzioni</CardHeader>
+            <UnorderedList>
+                <UnorderedListItem>
+                    <Check TValue="bool" @bind-Checked="@Settings.DoMove">Spostamento</Check>
+                    <Check TValue="bool" @bind-Checked="@Settings.ParallelExecution">Esecuzione parallela</Check>
+                    <Check TValue="bool" @bind-Checked="@Settings.CreateTopFolder">Crea automaticamente la cartella finale</Check>
+                    <Check TValue="bool" @bind-Checked="@Settings.FileSeparation">Separa per estensione</Check>
+                </UnorderedListItem>
+            </UnorderedList>
+        </Card>
+    </CardGroup>
 
-Welcome to your new app.
+   <Row>
+       <Button Clicked="@StartCopy" Color="Color.Success" Loading="@IsWorking" Disabled="@IsWorking">Inizia Elaborazione</Button>
+        <Button Clicked="@StopCopy" Color="Color.Danger" Disabled="@IsIdle">Arresta Elaborazione</Button>
+        <Button Clicked="@Verify" Color="Color.Primary" Loading="@IsWorking" Disabled="@IsWorking">Verifica</Button>
+   </Row>
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+
+   
+</Container>
+
+@code {
+    [Inject] ICopyService CopyService { get; set; }
+    [Inject] INotificationService NotificationService { get; set; }
+
+    private bool IsWorking { get; set; }
+    private bool IsIdle => !IsWorking;
+    private CancellationTokenSource _cancellationToken;
+
+    private SettingsModel Settings { get; set; }
+
+    private ObservableCollection<DestinationPathInfo> DestinationPaths { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Settings = new SettingsModel();
+        try
+        {
+            var lastSetting = await _localStorage.GetItemAsStringAsync("LastSetting");
+            if (!string.IsNullOrWhiteSpace(lastSetting))
+            {
+                await LoadSettings(lastSetting);
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.WriteLine(e);
+        }
+    }
+
+    private async Task LoadSettings()
+    {
+
+        var res = await FilePicker.PickAsync(PickOptions.Default);
+        await LoadSettings(res.FullPath);
+
+
+
+
+    }
+
+    private async Task LoadSettings(string path)
+    {
+        // load data here
+        var file = File.ReadAllText(path);
+        try
+        {
+
+            var settings = JsonConvert.DeserializeObject<SettingsModel>(file);
+            if (settings == null)
+            {
+                await NotificationService.Error("File settings vuoto");
+                //NotificationService.Notify(NotificationSeverity.Error, "File settings vuoto");
+                return;
+            }
+            if (settings.DestinationPaths != null && settings.DestinationPaths.Any())
+            {
+                DestinationPaths = new ObservableCollection<DestinationPathInfo>(from d in settings.DestinationPaths
+                                                                                 select new DestinationPathInfo() { DestinationPath = d });
+            }
+            Settings = settings;
+
+
+
+            await _localStorage.SetItemAsStringAsync("SettingsPath", new FileInfo(path).DirectoryName);
+            await _localStorage.SetItemAsStringAsync("LastSetting", path);
+            await NotificationService.Success("Impostazioni caricate con successo");
+            //NotificationService.Notify(NotificationSeverity.Success, "Impostazioni caricate con successo");
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            await NotificationService.Error(e.StackTrace, e.Message);
+            //NotificationService.Notify(NotificationSeverity.Error, e.Message, e.StackTrace);
+
+        }
+    }
+
+    private async Task SaveSettings()
+    {
+        Settings.DestinationPaths = DestinationPaths.Select(x => x.DestinationPath).ToList();
+
+        var json = JsonConvert.SerializeObject(Settings);
+
+        var defaultSavePath = await _localStorage.GetItemAsStringAsync("SettingsPath");
+        var res = await FilePicker.PickAsync(PickOptions.Default);
+        if (res != null && !string.IsNullOrWhiteSpace(res.FullPath))
+        {
+            var path = res.FullPath;
+            await File.WriteAllTextAsync(path, json);
+            await _localStorage.SetItemAsStringAsync("SettingsPath", new FileInfo(path).DirectoryName);
+            await _localStorage.SetItemAsStringAsync("LastSetting", path);
+            await NotificationService.Success("Impostazioni salvate con successo");
+        }
+        else
+        {
+            await NotificationService.Error("Impostazioni salvate con successo");
+        }
+
+
+    }
+
+    private async Task GetSourceFolder()
+    {
+        var path = await FolderPicker.PickFolder();
+
+        if (!string.IsNullOrWhiteSpace(path))
+        {
+            Settings.SourcePath = path;
+        }
+
+
+    }
+
+    private void AddDestination()
+    {
+
+        DestinationPaths.Add(new DestinationPathInfo());
+    }
+
+    private void RemoveDestination(DestinationPathInfo destToRemove)
+    {
+        DestinationPaths.Remove(destToRemove);
+    }
+
+    private void OpenFolder()
+    {
+        Process.Start("explorer.exe", Settings.SourcePath);
+    }
+
+    protected string GetMD5HashFromFile(string fileName)
+    {
+        FileStream file = new FileStream(fileName, FileMode.Open);
+        MD5 md5 = MD5.Create(); //new MD5CryptoServiceProvider();
+        byte[] retVal = md5.ComputeHash(file);
+
+        file.Close();
+
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < retVal.Length; i++)
+        {
+            sb.Append(retVal[i].ToString("x2"));
+        }
+        return sb.ToString();
+    }
+
+    private async Task<bool> CheckPaths()
+    {
+        if (string.IsNullOrWhiteSpace(Settings.SourcePath))
+        {
+
+            await NotificationService.Error("Sorgente assente");
+            return false;
+        }
+        if (!Directory.Exists(Settings.SourcePath))
+        {
+            await NotificationService.Error("La sorgente non è un percorso valido");
+            return false;
+        }
+        if (!DestinationPaths.Any())
+        {
+            await NotificationService.Error( "Non sono state specificate destinazioni");
+            return false;
+        }
+        else if (DestinationPaths.Any(x => string.IsNullOrWhiteSpace(x.DestinationPath)))
+        {
+            await NotificationService.Error("Almeno una destinazione contiene un percorso vuoto");
+            return false;
+        }
+
+        return true;
+    }
+
+    private async Task StartCopy()
+    {
+        var pathsOk = await CheckPaths();
+
+        if (!pathsOk)
+        {
+            return;
+        }
+
+        // CHECK SPAZIO LIBERO
+
+        var src = new DirectoryInfo(Settings.SourcePath);
+
+        var totalSourceSize = src.EnumerateFiles("*", SearchOption.AllDirectories).Sum(x => x.Length);
+
+        // check di conflitto percorso
+        foreach (var destinationPathInfo in DestinationPaths)
+        {
+            var dir = new DirectoryInfo(destinationPathInfo.DestinationPath);
+            var freeSpace = new DriveInfo(dir.Root.FullName).AvailableFreeSpace;
+            if (freeSpace < totalSourceSize)
+            {
+                await NotificationService.Error($"Spazio libero insufficiente su {dir.Root.FullName}");
+                return;
+            }
+            if (dir.FullName.Equals(src.FullName, StringComparison.OrdinalIgnoreCase)/* || dir.FullName.Contains(src.FullName, StringComparison.OrdinalIgnoreCase)*/)
+            {
+                await NotificationService.Error("Sorgente e destinazione coincidono");
+                return;
+            }
+        }
+
+        foreach (var dest in DestinationPaths)
+        {
+            //dest.Overwrite = this.Settings.Overwrite;
+            dest.ConflictType = this.Settings.FileConflict;
+            dest.DoMove = this.Settings.DoMove;
+            dest.FileSeparation = this.Settings.FileSeparation;
+            dest.CreateTopFolder = this.Settings.CreateTopFolder;
+
+        }
+
+        IsWorking = true;
+        //IsIdle = false;
+        _cancellationToken = new CancellationTokenSource();
+        var token = _cancellationToken.Token;
+        try
+        {
+            if (Settings.ParallelExecution)
+            {
+                await DestinationPaths.ParallelForEachAsync(async dest =>
+                {
+                    var timer = new Stopwatch();
+                    timer.Start();
+                    await CopyService.DoCopyAsync(dest, Settings.SourcePath, token, () =>
+    {
+        InvokeAsync(StateHasChanged);
+    });
+
+                    timer.Stop();
+                    dest.TotalTimeFormatted = timer.Elapsed.Humanize();
+                    await NotificationService.Success("Copia Finita");
+
+                // TODO Notifica di sistema
+                //Electron.Notification.Show(new ElectronNET.API.Entities.NotificationOptions("Finita una copia", dest.DestinationPath));
+                }, token);
+            }
+            else
+            {
+                foreach (var dest in DestinationPaths)
+                {
+                    var timer = new Stopwatch();
+                    timer.Start();
+                    await CopyService.DoCopyAsync(dest, Settings.SourcePath, token, () => InvokeAsync(StateHasChanged));
+
+                    timer.Stop();
+                    dest.TotalTimeFormatted = timer.Elapsed.Humanize();
+                    await NotificationService.Success("Copia Finita");
+
+                    // TODO Notifica di sistema
+                    //Electron.Notification.Show(new ElectronNET.API.Entities.NotificationOptions("Finita una copia", dest.DestinationPath));
+                }
+            }
+
+            if (Settings.DoMove)
+            {
+
+
+                Directory.Delete(Settings.SourcePath, true);
+
+            }
+
+            /*if (TurnOff)
+            {
+            Process.Start("shutdown", "/s /t 0");
+            }
+
+            if (Exit)
+            {
+            Environment.Exit(0);
+            }*/
+
+        }
+        catch (OperationCanceledException e)
+        {
+            Debug.WriteLine(e);
+            await NotificationService.Warning("Operazione Annullata");
+            //throw;
+        }
+        catch (Exception e)
+        {
+            Debug.WriteLine(e);
+            await NotificationService.Error(e.Message, "Errore");
+
+        }
+        finally
+        {
+            IsWorking = false;
+            //IsIdle = true;
+
+            // TODO Add notification
+            await NotificationService.Success("Tutte le copie sono finite");
+            //Electron.Notification.Show(new ElectronNET.API.Entities.NotificationOptions("Finito", "Tutte le copie sono finite"));
+        }
+    }
+
+
+
+    private void StopCopy()
+    {
+        if (_cancellationToken.Token.CanBeCanceled)
+        {
+            _cancellationToken.Cancel();
+        }
+
+        IsWorking = false;
+
+    }
+
+    
+}

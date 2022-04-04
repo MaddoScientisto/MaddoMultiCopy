@@ -1,0 +1,36 @@
+2021-04-28 11:08:22.327 +02:00 [INF] MSBuild registered from C:\Program Files\dotnet\sdk\5.0.202\
+2021-04-28 11:08:22.426 +02:00 [INF] Registered 1 extensions:
+	Default extension
+2021-04-28 11:08:24.496 +02:00 [INF] Initializing upgrade step Select an entrypoint
+2021-04-28 11:08:24.500 +02:00 [INF] Setting entrypoint to only project in solution: C:\Users\Maddo\Source\Repos\FileTransferManager\IOExtensions\IOExtensions.csproj
+2021-04-28 11:08:24.507 +02:00 [INF] Initializing upgrade step Select project to upgrade
+2021-04-28 11:08:24.570 +02:00 [INF] Initializing upgrade step Back up project
+2021-04-28 11:08:28.013 +02:00 [INF] Applying upgrade step Back up project
+2021-04-28 11:08:30.727 +02:00 [INF] Backing up C:\Users\Maddo\Source\Repos\FileTransferManager\IOExtensions to C:\Users\Maddo\Source\Repos\FileTransferManager.backup\IOExtensions
+2021-04-28 11:08:30.754 +02:00 [INF] Project backed up to C:\Users\Maddo\Source\Repos\FileTransferManager.backup\IOExtensions
+2021-04-28 11:08:30.756 +02:00 [INF] Upgrade step Back up project applied successfully
+2021-04-28 11:08:33.020 +02:00 [INF] Initializing upgrade step Convert project file to SDK style
+2021-04-28 11:08:35.635 +02:00 [INF] Applying upgrade step Convert project file to SDK style
+2021-04-28 11:08:35.637 +02:00 [INF] Converting project file format with try-convert, version 0.7.217901
+2021-04-28 11:08:38.701 +02:00 [INF] [try-convert] Conversion complete!
+2021-04-28 11:08:39.194 +02:00 [INF] Project file converted successfully! The project may require additional changes to build successfully against the new .NET target.
+2021-04-28 11:08:40.259 +02:00 [INF] Upgrade step Convert project file to SDK style applied successfully
+2021-04-28 11:08:42.569 +02:00 [INF] Initializing upgrade step Clean up NuGet package references
+2021-04-28 11:08:44.779 +02:00 [INF] Reference to .NET Upgrade Assistant analyzer package (Microsoft.DotNet.UpgradeAssistant.Extensions.Default.Analyzers, version 0.2.222702) needs added
+2021-04-28 11:08:44.784 +02:00 [INF] Packages to be added:
+Microsoft.DotNet.UpgradeAssistant.Extensions.Default.Analyzers, Version=0.2.222702
+2021-04-28 11:08:48.684 +02:00 [INF] Applying upgrade step Clean up NuGet package references
+2021-04-28 11:08:48.691 +02:00 [INF] Adding package reference: Microsoft.DotNet.UpgradeAssistant.Extensions.Default.Analyzers, Version=0.2.222702
+2021-04-28 11:08:51.268 +02:00 [INF] Upgrade step Clean up NuGet package references applied successfully
+2021-04-28 11:08:52.130 +02:00 [INF] Initializing upgrade step Update TFM
+2021-04-28 11:08:52.135 +02:00 [INF] TFM needs updated to netstandard2.0
+2021-04-28 11:08:54.412 +02:00 [INF] Applying upgrade step Update TFM
+2021-04-28 11:08:55.591 +02:00 [INF] Updated TFM to netstandard2.0
+2021-04-28 11:08:55.592 +02:00 [INF] Upgrade step Update TFM applied successfully
+2021-04-28 11:08:59.735 +02:00 [INF] Initializing upgrade step Update NuGet Packages
+2021-04-28 11:09:00.635 +02:00 [INF] No package updates needed
+2021-04-28 11:09:00.636 +02:00 [INF] Initializing upgrade step Add template files
+2021-04-28 11:09:00.671 +02:00 [INF] 0 expected template items needed
+2021-04-28 11:09:00.678 +02:00 [INF] Initializing upgrade step Update source code
+2021-04-28 11:09:01.770 +02:00 [INF] Initializing upgrade step Move to next project
+2021-04-28 11:09:28.891 +02:00 [INF] Saving upgrade progress file at C:\Users\Maddo\Source\Repos\FileTransferManager\.upgrade-assistant

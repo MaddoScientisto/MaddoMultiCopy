@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>FileTransferManager</id>
+    <version>$version$</version>
+    <title>$title$</title>
+    <authors>Martin Chrzan</authors>
+    <owners>Martin Chrzan</owners>
+    <license type="expression">MIT</license>
+    <projectUrl>https://github.com/martinchrzan/FileTransferManager</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>$description$</description>
+    <releaseNotes>Using COPY_FILE_FAIL_IF_EXISTS flag to improve transfer performance</releaseNotes>
+    <copyright>Copyright 2019-2020</copyright>
+    <tags>Copy Move File Directory Progress</tags>
+  </metadata>
+</package>
