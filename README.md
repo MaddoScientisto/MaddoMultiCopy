@@ -1,1 +1,1 @@
-# Multicopy.MAUI
+Allows copying files from a source folder to multiple destinations and optionally allows to separate them by extension (useful for instance for cameras that save both jpg and raw files in the same folder)
