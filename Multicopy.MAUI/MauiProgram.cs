@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Components.WebView.Maui;
+﻿using Blazorise;
+using Blazorise.Bootstrap5;
+using Blazorise.Icons.FontAwesome;
+using Microsoft.AspNetCore.Components.WebView.Maui;
 using Multicopy.MAUI.Data;
 using Multicopy.MAUI.Services;
 
@@ -22,6 +25,14 @@ public static class MauiProgram
 #elif MACCATALYST
 builder.Services.AddTransient<IFolderPicker, MaddoImageViewer.Platforms.MacCatalyst.FolderPicker>();;
 #endif
+
+		builder.Services
+	.AddBlazorise(options =>
+	{
+		options.Immediate = true;
+	})
+	.AddBootstrap5Providers()
+	.AddFontAwesomeIcons();
 
 		builder.Services.AddBlazorWebView();
 		builder.Services.AddSingleton<WeatherForecastService>();
