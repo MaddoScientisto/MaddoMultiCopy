@@ -63,4 +63,4 @@ jobs:
       shell: pwsh
       id: tree
       run: |
-        tree
+        tree /F /A
