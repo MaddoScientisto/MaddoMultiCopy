@@ -80,7 +80,7 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\FileTransferManager\IOExtensions\IOExtensions.csproj" />
-	  <ProjectReference Include="..\Multicopy.Core\Multicopy.Core.csproj" />
+	  <ProjectReference Include="..\Multicopy.MAUI.Core\Multicopy.MAUI.Core.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
