@@ -1,0 +1,46 @@
+name: .NET
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup .NET Core SDK
+      uses: actions/setup-dotnet@v1
+      with:
+          dotnet-version: '6.0.x'
+    - name: Install .NET workloads
+      shell: pwsh
+      run: |
+        # Step 1. Install the platform workloads (you don't need one for Windows)
+        #dotnet workload install android
+        #dotnet workload install ios
+        #dotnet workload install maccatalyst
+
+        # Step 2 (recommended). Install the .NET MAUI workloads for all the target platforms
+        # dotnet workload install maui
+
+        # Step 2 (alternative). If you only need to build for a specific platform, you can use individual installers instead.
+        # dotnet workload install maui-android
+        # dotnet workload install maui-ios
+        dotnet workload install maui-desktop # Needed for Windows build
+        # dotnet workload install maui-maccatalyst    
+      
+    - name: Restore NuGet packages
+      shell: pwsh
+      run: |
+        dotnet restore MauiDemo.csproj
+    - name: Build Maui WinUI project
+      shell: pwsh
+      run: |
+        msbuild MauiDemo.csproj -r -p:Configuration=Debug -p:TargetFramework=net6.0-windows10.0.19041
+    #- name: Test
+     # run: dotnet test --no-build --verbosity normal
