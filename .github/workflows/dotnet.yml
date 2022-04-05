@@ -7,40 +7,55 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
-
-    runs-on: ubuntu-latest
-
+  # ***************************** #
+# >>>>>>> Windows Build <<<<<<< #
+# ***************************** #
+  maui-windows:
+    runs-on: windows-2022
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
     - name: Setup .NET Core SDK
       uses: actions/setup-dotnet@v1
       with:
-          dotnet-version: '6.0.x'
-    - name: Install .NET workloads
+        dotnet-version: '6.0.x'
+
+    # Needed for Windows build
+    - name: Setup MSBuild.exe
+      uses: microsoft/setup-msbuild@v1.1
+      with:
+        vs-prerelease: true
+
+    - name: Generate version number using date and run number
       shell: pwsh
+      id: version-creator
       run: |
-        # Step 1. Install the platform workloads (you don't need one for Windows)
-        #dotnet workload install android
-        #dotnet workload install ios
-        #dotnet workload install maccatalyst
+        $buildDay = Get-Date -Format "yyyy.Mdd"
+        $ver = $buildDay + "." + $env:GITHUB_RUN_NUMBER + ".0"
+        echo "::set-output name=APP_VERSION::$ver"
 
-        # Step 2 (recommended). Install the .NET MAUI workloads for all the target platforms
-        # dotnet workload install maui
+    - name: Install MAUI workloads (currently required for hosted runners)
+      shell: pwsh
+      run: dotnet workload install maui --ignore-failed-sources
 
-        # Step 2 (alternative). If you only need to build for a specific platform, you can use individual installers instead.
-        # dotnet workload install maui-android
-        # dotnet workload install maui-ios
-        dotnet workload install maui-desktop # Needed for Windows build
-        # dotnet workload install maui-maccatalyst    
-      
     - name: Restore NuGet packages
       shell: pwsh
-      run: |
-        dotnet restore MauiDemo.csproj
+      run: dotnet restore Multicopy.MAUI/Multicopy.MAUI.csproj #--configfile src/MAUI/NuGet.Config
+      #env:
+        #TELERIK_USERNAME: ${{ secrets.MyTelerikAccountUsername }}
+        #TELERIK_PASSWORD: ${{ secrets.MyTelerikAccountPassword }}
+
     - name: Build Maui WinUI project
       shell: pwsh
       run: |
-        msbuild MauiDemo.csproj -r -p:Configuration=Debug -p:TargetFramework=net6.0-windows10.0.19041
-    #- name: Test
-     # run: dotnet test --no-build --verbosity normal
+        # On Windows, we use msbuild instead of dotnet build
+        msbuild Multicopy.MAUI/Multicopy.MAUI.csproj -r -p:Configuration=Debug -p:TargetFramework=net6.0-windows10.0.19041
+    
+    # - name: Upload build artifacts
+    #   uses: actions/upload-artifact@v2
+    #   with:
+    #     name: windows-v${{ steps.version-creator.outputs.APP_VERSION }}-artifacts
+    #     path: '*Windows\**\*.msix'
