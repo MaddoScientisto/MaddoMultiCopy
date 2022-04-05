@@ -52,13 +52,13 @@ jobs:
       shell: pwsh
       run: |
         # On Windows, we use msbuild instead of dotnet build
-        msbuild Multicopy.MAUI/Multicopy.MAUI.csproj -r -p:Configuration=Debug -p:TargetFramework=net6.0-windows10.0.19041
+        msbuild Multicopy.MAUI/Multicopy.MAUI.csproj -r -p:Configuration=Release -p:TargetFramework=net6.0-windows10.0.19041 /t:Publish /p:GenerateAppxPackageOnBuild=true
     
     - name: Upload build artifacts
       uses: actions/upload-artifact@v2
       with:
         name: windows-v${{ steps.version-creator.outputs.APP_VERSION }}-artifacts
-        path: 'bin\Debug\net6.0-windows10.0.19041\win10-x64\publish\*.msix'
+        path: 'bin\Release\net6.0-windows10.0.19041\win10-x64\AppPackages\**\*.msix'
     - name: Output tree
       shell: pwsh
       id: tree

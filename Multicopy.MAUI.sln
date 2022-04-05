@@ -8,9 +8,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IOExtensions", "FileTransfe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Multicopy.Test", "Multicopy.Test\Multicopy.Test.csproj", "{D0922768-2A22-4479-AEFD-EC9206A0E793}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Multicopy.Core", "Multicopy.Core\Multicopy.Core.csproj", "{48D41196-3E90-44ED-AC40-DE9E9B3A88E2}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Multicopy.MAUI.Core", "Multicopy.MAUI.Core\Multicopy.MAUI.Core.csproj", "{C54E174B-D338-45CF-90A9-4271776C2FE1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Multicopy.MAUI.Core", "Multicopy.MAUI.Core\Multicopy.MAUI.Core.csproj", "{C54E174B-D338-45CF-90A9-4271776C2FE1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -32,10 +30,6 @@ Global
 		{D0922768-2A22-4479-AEFD-EC9206A0E793}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D0922768-2A22-4479-AEFD-EC9206A0E793}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D0922768-2A22-4479-AEFD-EC9206A0E793}.Release|Any CPU.Build.0 = Release|Any CPU
-		{48D41196-3E90-44ED-AC40-DE9E9B3A88E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{48D41196-3E90-44ED-AC40-DE9E9B3A88E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{48D41196-3E90-44ED-AC40-DE9E9B3A88E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{48D41196-3E90-44ED-AC40-DE9E9B3A88E2}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C54E174B-D338-45CF-90A9-4271776C2FE1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C54E174B-D338-45CF-90A9-4271776C2FE1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C54E174B-D338-45CF-90A9-4271776C2FE1}.Release|Any CPU.ActiveCfg = Release|Any CPU

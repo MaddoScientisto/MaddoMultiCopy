@@ -87,5 +87,10 @@
 	  <Folder Include="Data\" />
 	  <Folder Include="Services\Impl\" />
 	</ItemGroup>
-
+	
+	<Target Name="_RemoveStaticWebAssetsDevelopmentManifest" BeforeTargets="GetCopyToOutputDirectoryItems">
+		<ItemGroup>
+			<ContentWithTargetPath Remove="$(StaticWebAssetDevelopmentManifestPath)" />
+		</ItemGroup>
+	</Target>
 </Project>
