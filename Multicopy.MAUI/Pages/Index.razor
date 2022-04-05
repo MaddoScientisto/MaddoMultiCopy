@@ -6,6 +6,7 @@
 @using System.Collections.ObjectModel
 @using Newtonsoft.Json
 @using Multicopy.MAUI.Services
+@using Multicopy.MAUI.Core.Services
 @using System.Diagnostics
 @using System.Security.Cryptography
 @using System.Text
@@ -106,9 +107,6 @@
         <Button Clicked="@StartCopy" Color="Color.Success" Loading="@IsWorking" Disabled="@IsWorking">Inizia Elaborazione</Button>
         <Button Clicked="@StopCopy" Color="Color.Danger" Disabled="@IsIdle">Arresta Elaborazione</Button>
     </Row>
-
-
-
 </Container>
 
 @code {

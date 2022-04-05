@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Multicopy.MAUI.Services
+namespace Multicopy.MAUI.Core.Services
 {
     public interface ICopyService
     {

@@ -1,5 +1,7 @@
 ﻿using Humanizer;
 using IOExtensions;
+using Multicopy.Core.Services;
+using Multicopy.MAUI.Core.Services;
 using Multicopy.MAUI.Data;
 using System;
 using System.Collections.Generic;
@@ -15,9 +17,11 @@ namespace Multicopy.MAUI.Services.Impl
     public class CopyService : ICopyService
     {
         private readonly IFolderPicker _folderPicker;
-        public CopyService(IFolderPicker folderPicker)
+        private readonly IFileSystemService _fileSystem;
+        public CopyService(IFolderPicker folderPicker, IFileSystemService fileSystem)
         {
             _folderPicker = folderPicker;
+            _fileSystem = fileSystem;
         }
         public DestinationPathInfo Build()
         {
@@ -27,7 +31,7 @@ namespace Multicopy.MAUI.Services.Impl
         public void Progress(DestinationPathInfo dpi, TransferProgress obj)
         {
 
-            Console.WriteLine($"Progress: {obj.Transferred}/{obj.Total}");
+            //Console.WriteLine($"Progress: {obj.Transferred}/{obj.Total}");
 
             dpi.FilesToCopy = Convert.ToInt32(obj.Total);
             dpi.FilesCopied = Convert.ToInt32(obj.Transferred);
@@ -53,23 +57,13 @@ namespace Multicopy.MAUI.Services.Impl
 
         public void OpenFolder(DestinationPathInfo dpi)
         {
-            Process.Start("explorer.exe", dpi.DestinationPath);
+            _fileSystem.StartProcess("explorer.exe", dpi.DestinationPath);           
         }
 
         public async Task DoCopyAsync(DestinationPathInfo dpi, string sourcePath, CancellationToken cancellationToken, Action Tick)
         {
-            /*var src = new PathFactory().Create(sourcePath);
-            var dest = new PathFactory().Create(Path);
-            var sourceFiles = src.DirectoryInfo.EnumerateFiles("*", new EnumerationOptions() { RecurseSubdirectories = true });
-
-            var sourceDirectories = src.DirectoryInfo.EnumerateDirectories();
-
-            var baseSplit = sourcePath.Split('\\');
-            var baseFolder = baseSplit.Last();*/
-
-
-
-            var allFiles = Directory.EnumerateFiles(sourcePath, "*", SearchOption.AllDirectories).Count();
+            
+            int allFiles = _fileSystem.CountFilesInDirectory(sourcePath, "*", SearchOption.AllDirectories);
             dpi.FilesToCopy = allFiles;
             dpi.FilesCopied = 0;
             dpi.FilesOverwritten = 0;
@@ -79,15 +73,11 @@ namespace Multicopy.MAUI.Services.Impl
 
             if (dpi.CreateTopFolder)
             {
-                var finalPathName = System.IO.Path.EndsInDirectorySeparator(sourcePath) ? System.IO.Path.GetDirectoryName(sourcePath) : System.IO.Path.GetDirectoryName($"{sourcePath}{System.IO.Path.DirectorySeparatorChar}");
+              
 
+                var newStartFolder = _fileSystem.MakeNewStartFolder(_fileSystem.MakeFinalPathName(sourcePath), dpi.DestinationPath);
 
-                var newStartFolder = finalPathName == null ? dpi.DestinationPath : System.IO.Path.Combine(dpi.DestinationPath, finalPathName.Split(System.IO.Path.DirectorySeparatorChar).Last());
-
-
-                if (!Directory.Exists(newStartFolder))
-                    Directory.CreateDirectory(newStartFolder);
-
+                _fileSystem.CreateNewDirectoryIfNotExists(newStartFolder);
 
                 if (dpi.FileSeparation)
                 {
@@ -121,8 +111,8 @@ namespace Multicopy.MAUI.Services.Impl
         private async Task CopyWithSeparationAsync(DestinationPathInfo dpi, string source, string destination, CancellationToken cancellationToken, Action Tick)
         {
 
-            string[] files = Directory.GetFiles(source, "*", SearchOption.AllDirectories);
-            // TODO SEPARARE FILES
+            string[] files = _fileSystem.GetFiles(source, "*", SearchOption.AllDirectories);
+            
             var extsDic = SeparateByExtension(files);
 
             foreach (var ext in extsDic)
@@ -130,10 +120,8 @@ namespace Multicopy.MAUI.Services.Impl
 
                 var newPath = System.IO.Path.Combine(destination, ext.Key.Remove(0, 1)); // dotless extension
 
-                if (!Directory.Exists(newPath))
-                    Directory.CreateDirectory(newPath);
-
-
+                _fileSystem.CreateNewDirectoryIfNotExists(newPath);
+                
                 foreach (var file in ext.Value)
                 {
                     var destName = TryGetDestinationFileName(dpi, file, newPath, out var exists);
@@ -185,13 +173,13 @@ namespace Multicopy.MAUI.Services.Impl
             string dest = System.IO.Path.Combine(destinationFolder, name);
 
             // Check if file exists
-            if (File.Exists(dest))
+            if (_fileSystem.FileExists(dest))
             {
                 exists = true;
                 switch (dpi.ConflictType)
                 {
                     case FileConflictType.Overwrite:
-                        File.Delete(dest);
+                        _fileSystem.DeleteFile(dest);
                         dpi.FilesOverwritten++;
                         dpi.FilesDeleted++;
                         return dest;
@@ -206,7 +194,7 @@ namespace Multicopy.MAUI.Services.Impl
                             {
                                 var newName = $"{fileNameWithoutExtension} ({i}){ext}";
                                 var newPath = Path.Combine(destinationFolder, newName);
-                                if (!File.Exists(newPath))
+                                if (!_fileSystem.FileExists(newPath))
                                 {
                                     dest = newPath;
                                     break;
@@ -234,11 +222,11 @@ namespace Multicopy.MAUI.Services.Impl
 
         }
 
-        private async Task CopyFolderAsync(DestinationPathInfo dpi, string source, string destinationFolder, CancellationToken cancellationToken, Action Tick)
+        private async Task CopyFolderAsync(DestinationPathInfo dpi, string source, string destinationFolder, CancellationToken cancellationToken, Action? Tick)
         {
-            if (!Directory.Exists(destinationFolder))
-                Directory.CreateDirectory(destinationFolder);
-            string[] files = Directory.GetFiles(source);
+            _fileSystem.CreateNewDirectoryIfNotExists(destinationFolder);
+            
+            string[] files = _fileSystem.GetFiles(source);
             foreach (string file in files)
             {
 
@@ -255,7 +243,7 @@ namespace Multicopy.MAUI.Services.Impl
 
                 await CopyFileAsync(dpi, file, destName, cancellationToken, Tick);
             }
-            string[] folders = Directory.GetDirectories(source);
+            string[] folders = _fileSystem.GetDirectories(source);
             foreach (string folder in folders)
             {
                 string name = new DirectoryInfo(folder).Name;// Path.GetFileName(folder);
@@ -268,19 +256,19 @@ namespace Multicopy.MAUI.Services.Impl
 
 
 
-        private async Task CopyFileAsync(DestinationPathInfo dpi, string sourceFile, string destrinationFile, CancellationToken token, Action Tick)
+        private async Task CopyFileAsync(DestinationPathInfo dpi, string sourceFile, string destrinationFile, CancellationToken token, Action? Tick)
         {
             var bufferSize = 0x10000;
             var fileOptions = FileOptions.Asynchronous | FileOptions.SequentialScan;
             var timer = new Stopwatch();
             timer.Start();
-            await using var sourceStream = new FileStream(sourceFile, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize);
-            await using var destinationStream = new FileStream(destrinationFile, FileMode.CreateNew, FileAccess.Write, FileShare.None, bufferSize, fileOptions);
+            await using Stream sourceStream = _fileSystem.GetStream(sourceFile, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize);
+            await using Stream destinationStream = _fileSystem.GetStream(destrinationFile, FileMode.CreateNew, FileAccess.Write, FileShare.None, bufferSize, fileOptions);
             var size = sourceStream.Length;
             await sourceStream.CopyToAsync(destinationStream, bufferSize, token).ConfigureAwait(false);
             if (dpi.DoMove)
             {
-                File.Delete(sourceFile);
+                _fileSystem.DeleteFile(sourceFile);             
                 dpi.FilesDeleted++;
             }
             timer.Stop();

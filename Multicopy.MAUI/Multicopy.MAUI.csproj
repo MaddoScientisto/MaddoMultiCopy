@@ -80,6 +80,12 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\FileTransferManager\IOExtensions\IOExtensions.csproj" />
+	  <ProjectReference Include="..\Multicopy.Core\Multicopy.Core.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Data\" />
+	  <Folder Include="Services\Impl\" />
 	</ItemGroup>
 
 </Project>

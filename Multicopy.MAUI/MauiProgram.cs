@@ -3,6 +3,9 @@ using Blazorise;
 using Blazorise.Bootstrap5;
 using Blazorise.Icons.FontAwesome;
 using Microsoft.AspNetCore.Components.WebView.Maui;
+using Multicopy.Core.Services;
+using Multicopy.Core.Services.Impl;
+using Multicopy.MAUI.Core.Services;
 using Multicopy.MAUI.Data;
 using Multicopy.MAUI.Services;
 using Multicopy.MAUI.Services.Impl;
@@ -37,9 +40,9 @@ public static class MauiProgram
 	.AddFontAwesomeIcons();
 
 		builder.Services.AddBlazorWebView();
-		builder.Services.AddSingleton<WeatherForecastService>();
+		//builder.Services.AddSingleton<WeatherForecastService>();
 		builder.Services.AddTransient<ICopyService, CopyService>();
-
+		builder.Services.AddTransient<IFileSystemService, WindowsFileSystemService>();
 
 		builder.Services.AddBlazoredLocalStorage();
 
