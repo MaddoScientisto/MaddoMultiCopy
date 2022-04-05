@@ -54,8 +54,8 @@ jobs:
         # On Windows, we use msbuild instead of dotnet build
         msbuild Multicopy.MAUI/Multicopy.MAUI.csproj -r -p:Configuration=Debug -p:TargetFramework=net6.0-windows10.0.19041
     
-    # - name: Upload build artifacts
-    #   uses: actions/upload-artifact@v2
-    #   with:
-    #     name: windows-v${{ steps.version-creator.outputs.APP_VERSION }}-artifacts
-    #     path: '*Windows\**\*.msix'
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: windows-v${{ steps.version-creator.outputs.APP_VERSION }}-artifacts
+        path: '*Windows\**\*.msix'
