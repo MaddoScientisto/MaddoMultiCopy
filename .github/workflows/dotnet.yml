@@ -59,3 +59,8 @@ jobs:
       with:
         name: windows-v${{ steps.version-creator.outputs.APP_VERSION }}-artifacts
         path: 'bin\Debug\net6.0-windows10.0.19041\win10-x64\publish\*.msix'
+    - name: Output tree
+      shell: pwsh
+      id: tree
+      run: |
+        tree
