@@ -17,7 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FileTransferManager\IOExtensions\IOExtensions.csproj" />
-    <ProjectReference Include="..\Multicopy.Core\Multicopy.Core.csproj" />
+    <ProjectReference Include="..\Multicopy.MAUI\Multicopy.MAUI.csproj" />
   </ItemGroup>
 
 </Project>
